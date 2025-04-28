@@ -1,33 +1,29 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
-function useFetch(){
-    useEffect(()=> {
-    
-              async function fetchPlace() {
-              setIsFetching(true);
-              
-            try{
-               const places = await fetchAvailablePlaces();
-    
-                navigator.geolocation.getCurrentPosition((positon)=>{
-                
-                const sortedPlaces = sortPlacesByDistance(
-                  
-                  places, positon.coords.latitude, positon.coords.longitude);
-                setAvailablePlaces(sortedPlaces);
-                setIsFetching(false);
-    
-              }); 
-    
-          } catch(error){
-            setError({
-              message:
-                  error.message || 'Could not fetch places, please try again later..'
-            });
-            setIsFetching(false);
+export function useFetch(fetchFn, initialValue){
+  const [isFetching, setIsFetching] = useState(false);
+  const [error, setError] = useState();
+  const [fetchedData, setFetchedData] = useState(initialValue);
+
+     useEffect(()=>{
+        async function fetchData(){
+          setIsFetching(true);
+          try{
+            const data = await fetchFn();
+            setFetchedData(data);
+          }catch(error){
+            setError({message: error.message || 'Failed to fetch data.'});
           }
+          setIsFetching(false);
         }
     
-        fetchPlace();
-      },[])
+        fetchData(); 
+      },[fetchFn]);
+
+      return {
+        isFetching,
+        fetchedData,
+        setFetchedData,
+        error
+      }
 }
